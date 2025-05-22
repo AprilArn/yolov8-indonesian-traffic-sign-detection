@@ -7,13 +7,13 @@ from werkzeug.utils import secure_filename
 from lane_detection_module import detect_lane
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"
+app.secret_key = "your_secret_key"  # maybe i don't need this
 
 UPLOAD_FOLDER = r'yolov8-app/uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-model = YOLO(r"D:\Perkuliahan\Semester 8\Skripsi\development\ITSD Project\models\runs_v8n_640\detect\train\weights\best.pt")
+model = YOLO(r"D:\Perkuliahan\Semester 8\Skripsi\version-control\yolov8-indonesian-traffic-sign-detection\models\runs_v8n_640\detect\train\weights\best.pt")
 
 latest_detection = []
 previous_lines = None
