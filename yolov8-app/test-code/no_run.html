@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Traffic Sign Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Traffic Sign Detection</h1>
+
+        <div class="main-box">
+            <div class="video-container">
+                <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Video Stream">
+                <label for="upload-file" class="upload-btn">Upload File</label>
+                <input type="file" id="upload-file" hidden>
+            </div>
+
+            <div class="result-box">
+                <div class="result-item"></div>
+                <div class="result-item"></div>
+                <div class="result-item"></div>
+            </div>
+        </div>
+
+        <div class="button-panel">
+            <div class="mode-buttons">
+                <button class="btn active">Real-Time</button>
+                <button class="btn">Camera</button>
+                <button class="btn">Video</button>
+            </div>
+            <div class="action-buttons">
+                <button class="btn clear-btn">Clear</button>
+                <button class="btn start-btn">Start</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

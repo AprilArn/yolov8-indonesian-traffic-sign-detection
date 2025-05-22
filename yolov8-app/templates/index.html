@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Traffic Sign Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style test.css') }}">
+    <!-- load script.js -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Traffic Sign Detection</h1>
+
+        <div class="main-box">
+
+            <div class="video-container">
+                <img id="video-stream"/>
+                <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data" style="display: none;">
+                    <label for="upload-file" class="upload-btn">Upload File</label>
+                    <input type="file" id="upload-file" name="file" onchange="document.getElementById('upload-form').submit();" hidden>
+                </form>
+            </div>
+            <div class="result-box" id="result-box">
+                <!-- Hasil deteksi akan dimasukkan lewat JavaScript -->
+            </div>
+
+        </div>
+
+        <div class="button-panel">
+
+            <div class="mode-buttons">
+                <button class="btn" onclick="startCameraMode()">Camera</button>
+                <button class="btn" onclick="selectFileMode()">File</button>
+            </div>
+            <div class="action-buttons">
+                <button class="btn clear-btn" onclick="clearStream()">Clear</button>
+                <button class="btn start-btn" onclick="startDetection()">Start</button>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+</html>
