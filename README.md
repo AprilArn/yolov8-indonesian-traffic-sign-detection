@@ -1,2 +1,3 @@
-# yolov8-indonesian-traffic-sign-detection
-Indonesian Traffic Sign Detection and Steering Advice System
+# YOLOv8: Indonesian Traffic Sign Detection
+
+Indonesian Traffic Sign Detection with Steering Advice System

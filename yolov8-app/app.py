@@ -9,11 +9,14 @@ from lane_detection_module import detect_lane
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # maybe i don't need this
 
-UPLOAD_FOLDER = r'yolov8-app/uploads'
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+UPLOAD_FOLDER = r'yolov8-app/media/uploads'
+RESULT_FOLDER = r'yolov8-app/media'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(RESULT_FOLDER, exist_ok=True)
 
-model = YOLO(r"D:\Perkuliahan\Semester 8\Skripsi\version-control\yolov8-indonesian-traffic-sign-detection\models\runs_v8n_640\detect\train\weights\best.pt")
+model = YOLO(r"D:\Perkuliahan\Semester 8\Skripsi\version-control\yolov8-indonesian-traffic-sign-detection\models\runs_v8n_736\detect\train\weights\best.pt")
+
+current_fps = 0
 
 latest_detection = []
 previous_lines = None
@@ -22,6 +25,10 @@ last_detection_time = None
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/get_fps')
+def get_fps():
+    return jsonify(fps=round(current_fps, 2))
 
 @app.route('/camera_feed')
 def camera_feed():
@@ -56,8 +63,9 @@ def generate_camera_stream():
         curr_time = time.time()
         fps = 1 / (curr_time - prev_time)
         prev_time = curr_time
-        cv2.putText(frame_with_boxes, f"FPS: {fps:.2f}", (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        global current_fps
+        current_fps = fps
+
 
         ret, buffer = cv2.imencode('.jpg', frame_with_boxes)
         frame = buffer.tobytes()
@@ -102,7 +110,7 @@ def generate_frames(path):
         for box in results[0].boxes:
             cls_id = int(box.cls[0])
             conf = float(box.conf[0])
-            if conf >= 0.65:
+            if conf >= 0.7:
                 label = model.names[cls_id]
                 detections.append(f"{label} ({conf:.2f})")
         latest_detection = detections
@@ -114,8 +122,8 @@ def generate_frames(path):
         curr_time = time.time()
         fps = 1 / (curr_time - prev_time)
         prev_time = curr_time
-        cv2.putText(frame_with_boxes, f"FPS: {fps:.2f}", (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        global current_fps
+        current_fps = fps
 
         ret, buffer = cv2.imencode('.jpg', frame_with_boxes)
         frame = buffer.tobytes()
@@ -133,6 +141,26 @@ def check_video_uploaded():
     if video_path and os.path.exists(video_path):
         return jsonify(status="ok")
     return jsonify(status="not_found")
+
+@app.route('/save_prediction', methods=['POST'])
+def save_prediction():
+    video_path = session.get('uploaded_video_path')
+    if not video_path or not os.path.exists(video_path):
+        return jsonify({"status": "error", "message": "No uploaded video found."}), 400
+
+    output_path = os.path.join(RESULT_FOLDER, 'result_' + os.path.basename(video_path))
+
+    results = model.predict(
+        source=video_path,
+        save=True,
+        save_txt=False,
+        save_conf=True,
+        project=RESULT_FOLDER,
+        name='',
+        exist_ok=True
+    )
+
+    return jsonify({"status": "ok", "message": "Prediction saved.", "output": output_path})
 
 @app.route('/clear_uploaded_video', methods=['POST'])
 def clear_uploaded_video():

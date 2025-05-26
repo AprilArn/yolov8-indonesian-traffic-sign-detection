@@ -1,4 +1,5 @@
 function setActiveMode(modeName) {
+
     const buttons = document.querySelectorAll(".mode-buttons .btn");
     buttons.forEach(btn => {
         if (btn.innerText === modeName) {
@@ -7,27 +8,85 @@ function setActiveMode(modeName) {
             btn.classList.remove("active");
         }
     });
+
 }
 
 function startCameraMode() {
 
-    setActiveMode("Camera");
     clearStream();
+    setActiveMode("Camera");
     
     const stream = document.getElementById("video-stream");
     stream.src = "/camera_feed";
-    document.getElementById("upload-form").style.display = "none";
-    document.getElementById('video-stream').src = '/camera_feed'; // ganti dengan stream kamera jika perlu
+    document.getElementById("upload-form").style.display = "none";    // Sembunyikan form upload
+    // document.getElementById("action-buttons").style.display = "block"; // Tampilkan tombol aksi start dan clear
+
+    // Nonaktifkan tombol Clear
+    const clearBtn = document.querySelector(".clear-btn");
+    clearBtn.classList.add("disabled");
+
+    // Nonaktifkan tombol Start
+    const startBtn = document.querySelector(".start-btn");
+    startBtn.classList.add("disabled");
+
 
 }
 
 function selectFileMode() {
 
     clearStream(); // reset tampilan
+    handleUploadStart();
     document.getElementById("upload-form").style.display = "block"; // tampilkan upload form
-    // stream.src = ""; // Hentikan stream video
+    // document.getElementById("action-buttons").style.display = "block"; // Tampilkan tombol aksi start dan clear
     setActiveMode("File Upload");
 
+}
+
+function handleUploadStart() {
+
+    //  Aktifkan tombol Clear
+    const clearBtn = document.querySelector(".clear-btn");
+    clearBtn.classList.remove("disabled");
+
+    // Nonaktifkan tombol Start
+    const startBtn = document.querySelector(".start-btn");
+    startBtn.classList.add("disabled");
+
+    // Nonaktifkan tombol Save
+    const saveBtn = document.querySelector(".save-btn");
+    saveBtn.classList.add("disabled");
+
+    // Setelah upload berhasil (tunggu server respon), aktifkan kembali tombol
+    // Gunakan fetch event listener atau polling status jika perlu
+
+    // Jika halaman reload (form kirim via POST normal), gunakan event onload:
+
+    window.addEventListener('load', () => {
+        startBtn.classList.remove("disabled");  // Aktifkan tombol Start
+        saveBtn.classList.remove("disabled");   // Aktifkan tombol Save
+    });
+
+}
+
+function saveResults() {
+
+    fetch('/save_prediction', {
+        method: 'POST'
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "ok") {
+            alert("Prediction saved successfully!");
+            console.log("Saved to:", data.output);
+        } else {
+            alert("Failed to save prediction: " + data.message);
+        }
+    })
+    .catch(err => {
+        console.error("Error saving prediction:", err);
+        alert("Failed to process video.");
+    });
+    
 }
 
 function startDetection() {
@@ -62,6 +121,8 @@ function startDetection() {
 
 function clearStream() {
 
+    handleUploadStart();
+
     const stream = document.getElementById("video-stream");
 
     // Hentikan stream jika kamera aktif
@@ -95,41 +156,56 @@ function clearStream() {
 }
 
 setInterval(() => {
-
     const stream = document.getElementById("video-stream");
 
-    // Jika source kosong, hentikan deteksi dan kosongkan hasil
-    if (!stream.src || stream.src === window.location.origin + "/") {
-        const container = document.getElementById("result-box");
-        container.innerHTML = ""; // Bersihkan hasil sebelumnya
+    const isStreamInactive = !stream.src || stream.src === window.location.origin + "/";
 
-        const item = document.createElement("div");
-        item.className = "result-item";
-        item.innerText = ""; // Kosongkan isi
-        container.appendChild(item);
+    const fpsBox = document.getElementById("fps-box");
+    const resultContainer = document.getElementById("result-box");
+
+    if (isStreamInactive) {
+        // Kosongkan FPS dan hasil deteksi
+        if (fpsBox) fpsBox.innerText = "FPS: --";
+        if (resultContainer) {
+            resultContainer.innerHTML = "";
+            const item = document.createElement("div");
+            item.className = "result-item";
+            item.innerText = ""; // Kosongkan isi
+            resultContainer.appendChild(item);
+        }
         return;
     }
 
-    // Lanjutkan deteksi jika stream aktif
-    fetch('/latest_detection')
-    .then(res => res.json())
-    .then(data => {
-        const container = document.getElementById("result-box");
-        container.innerHTML = ""; // Hapus hasil lama
+    // Ambil FPS
+    fetch('/get_fps')
+        .then(res => res.json())
+        .then(data => {
+            if (fpsBox) {
+                fpsBox.innerText = `FPS: ${data.fps}`;
+            }
+        });
 
-        if (data.detections.length === 0) {
-            const item = document.createElement("div");
-            item.className = "result-item";
-            item.innerText = "No objects detected.";
-            container.appendChild(item);
-        } else {
-            data.detections.forEach(det => {
-                const item = document.createElement("div");
-                item.className = "result-item";
-                item.innerText = det;
-                container.appendChild(item);
-            });
-        }
-    });
-        
-}, 500);
+    // Ambil hasil deteksi
+    fetch('/latest_detection')
+        .then(res => res.json())
+        .then(data => {
+            if (resultContainer) {
+                resultContainer.innerHTML = "";
+
+                if (data.detections.length === 0) {
+                    const item = document.createElement("div");
+                    item.className = "result-item";
+                    item.innerText = "No objects detected.";
+                    resultContainer.appendChild(item);
+                } else {
+                    data.detections.forEach(det => {
+                        const item = document.createElement("div");
+                        item.className = "result-item";
+                        item.innerText = det;
+                        resultContainer.appendChild(item);
+                    });
+                }
+            }
+        });
+
+}, 500); // Setiap 500ms

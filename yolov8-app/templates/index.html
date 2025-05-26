@@ -18,10 +18,11 @@
 
             <div class="video-container">
                 <img id="video-stream"/>
-                <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data" style="display: none;">
+                <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data" style="display: none;" onsubmit="handleUploadStart()">
                     <label for="upload-file" class="upload-btn">Upload File</label>
                     <input type="file" id="upload-file" name="file" onchange="document.getElementById('upload-form').submit();" hidden>
                 </form>
+                <div id="fps-box">FPS: --</div>
             </div>
             <div class="result-box" id="result-box">
                 <!-- Hasil deteksi akan dimasukkan lewat JavaScript -->
@@ -35,8 +36,9 @@
                 <button class="btn" onclick="startCameraMode()">Camera</button>
                 <button class="btn" onclick="selectFileMode()">File</button>
             </div>
-            <div class="action-buttons">
-                <button class="btn clear-btn" onclick="clearStream()">Clear</button>
+            <div class="action-buttons" id="action-buttons"> <!-- style="display: none; -->
+                <button class="btn clear-btn" onclick="clearStream()">Stop & Clear</button>
+                <button class="btn save-btn" onclick="saveResults()">Save</button>
                 <button class="btn start-btn" onclick="startDetection()">Start</button>
             </div>
 

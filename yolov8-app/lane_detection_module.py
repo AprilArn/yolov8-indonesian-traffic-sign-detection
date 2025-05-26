@@ -12,10 +12,10 @@ def region_of_interest(image):
     height, width = image.shape
     mask = np.zeros_like(image)
     polygon = np.array([[ 
-        (int(0.025 * width), height),
-        (int(0.975 * width), height),
-        (int(0.6 * width), int(0.55 * height)),
-        (int(0.4 * width), int(0.55 * height))
+        (int(0.0 * width), height),                # Left bottom corner
+        (int(1.0 * width), height),                # Right bottom corner
+        (int(0.575 * width), int(0.55 * height)),  # Right top corner
+        (int(0.425 * width), int(0.55 * height))   # Left top corner
     ]], np.int32)
     cv2.fillPoly(mask, polygon, 255)
     masked_image = cv2.bitwise_and(image, mask)
@@ -24,9 +24,9 @@ def region_of_interest(image):
 def draw_roi_overlay(frame, polygon):
     overlay = frame.copy()
     cv2.fillPoly(overlay, polygon, (0, 0, 0))
-    alpha = 0.2
+    alpha = 0.3
     cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
-    cv2.polylines(frame, polygon, isClosed=True, color=(30, 30, 30), thickness=2)
+    # cv2.polylines(frame, polygon, isClosed=True, color=(100, 100, 100), thickness=2)
     return frame
 
 def detect_lines(image):
@@ -43,7 +43,7 @@ def detect_lines(image):
 def make_coordinates(image, line_parameters):
     slope, intercept = line_parameters
     y1 = int(image.shape[0] * 0.85)
-    y2 = int(image.shape[0] * 0.7)
+    y2 = int(image.shape[0] * 0.65)
     if slope == 0:
         slope = 0.1
     x1 = int((y1 - intercept) / slope)
@@ -78,6 +78,7 @@ def average_slope_intercept(image, lines):
 
     return np.array([left_line, right_line])
 
+# Smooth the lines using linear interpolation
 def lerp_lines(old_lines, new_lines, alpha=0.1):
     if old_lines is None:
         return new_lines
@@ -91,7 +92,7 @@ def display_lines(image, lines):
     line_image = np.zeros_like(image)
     if lines is not None:
         for x1, y1, x2, y2 in lines:
-            cv2.line(line_image, (x1, y1), (x2, y2), (0, 255, 0), 4)
+            cv2.line(line_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
     return line_image
 
 def add_overlay(base_image, line_image):
@@ -123,9 +124,13 @@ def detect_lane(frame, previous_lines=None, last_detection_time=None, max_no_det
     else:
         combo_image = frame_with_roi
 
-    if previous_lines is not None and len(previous_lines) == 2:
-        h, w = frame.shape[:2]
+    # Steering Advice
+    h, w = frame.shape[:2]
 
+    center_x = w // 2
+    center_y = int(h * 0.835)
+
+    if previous_lines is not None and len(previous_lines) == 2:
         left = previous_lines[0]
         right = previous_lines[1]
 
@@ -133,22 +138,14 @@ def detect_lane(frame, previous_lines=None, last_detection_time=None, max_no_det
         right_bottom = (right[0], right[1])
 
         mid_x = (left_bottom[0] + right_bottom[0]) // 2
-        mid_y = (left_bottom[1] + right_bottom[1]) // 2
+        # mid_y = (left_bottom[1] + right_bottom[1]) // 2
 
-        center_x = w // 2
-        center_y = mid_y
-
-        # Garis vertikal dari bawah ke tengah
-        cv2.line(combo_image, (center_x, h), (center_x, center_y), (0, 255, 255), 2)
+        # Garis horizontal dari tengah ke tengah prediksi
         cv2.line(combo_image, (center_x, center_y), (mid_x, center_y), (255, 255, 0), 2)
 
         # Garis vertikal kecil di titik prediksi dan tengah
         for x in [left_bottom[0], right_bottom[0], mid_x]:
             cv2.line(combo_image, (x, center_y - 10), (x, center_y + 10), (0, 255, 0), 2)
-
-        # Garis pengingat batas belok
-        for x in [center_x - 60, center_x + 60]:
-            cv2.line(combo_image, (x, center_y - 10), (x, center_y + 10), (0, 0, 255), 2)
 
         offset = mid_x - center_x
         direction = "Straight"
@@ -163,5 +160,12 @@ def detect_lane(frame, previous_lines=None, last_detection_time=None, max_no_det
 
         cv2.putText(combo_image, direction, (text_x, text_y),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+
+    # Garis vertikal dari bawah ke tengah
+    cv2.line(combo_image, (center_x, h), (center_x, center_y), (0, 255, 255), 2)
+
+    # Garis pengingat batas belok
+    for x in [center_x - 60, center_x + 60]:
+        cv2.line(combo_image, (x, center_y - 10), (x, center_y + 10), (0, 0, 255), 2)
 
     return combo_image, previous_lines, last_detection_time
