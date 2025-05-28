@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, Response, request, redirect, url_for, jsonify
 from ultralytics import YOLO
 import cv2
 import os
@@ -7,7 +7,6 @@ from werkzeug.utils import secure_filename
 from lane_detection_module import detect_lane
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"  # Tetapkan menggunakan kunci rahasia untuk sesi atau tidak perlu menggunakan sesi
 
 UPLOAD_FOLDER = r'yolov8-app/media/uploads'
 RESULT_FOLDER = r'yolov8-app/media'
@@ -17,14 +16,14 @@ os.makedirs(RESULT_FOLDER, exist_ok=True)
 model = YOLO(r"D:\Perkuliahan\Semester 8\Skripsi\version-control\yolov8-indonesian-traffic-sign-detection\models\runs_v8n_736\detect\train\weights\best.pt")
 
 current_fps = 0
-
 latest_detection = []
 previous_lines = None
 last_detection_time = None
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    filename = request.args.get('filename')  # agar bisa digunakan di template jika perlu
+    return render_template('index_without_session.html', filename=filename)
 
 @app.route('/get_fps')
 def get_fps():
@@ -66,7 +65,6 @@ def generate_camera_stream():
         global current_fps
         current_fps = fps
 
-
         ret, buffer = cv2.imencode('.jpg', frame_with_boxes)
         frame = buffer.tobytes()
         yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
@@ -83,15 +81,17 @@ def upload():
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
 
-    session['uploaded_video_path'] = filepath
-    return redirect(url_for('index'))
+    return redirect(url_for('index', filename=filename))
 
 @app.route('/video_feed')
 def video_feed():
-    video_path = session.get('uploaded_video_path')
-    if video_path and os.path.exists(video_path):
+    filename = request.args.get('filename')
+    if not filename:
+        return "No video specified", 400
+    video_path = os.path.join(UPLOAD_FOLDER, secure_filename(filename))
+    if os.path.exists(video_path):
         return Response(generate_frames(video_path), mimetype='multipart/x-mixed-replace; boundary=frame')
-    return "No video uploaded", 400
+    return "Video not found", 404
 
 def generate_frames(path):
     global latest_detection, previous_lines, last_detection_time
@@ -137,16 +137,23 @@ def get_latest_detection():
 
 @app.route('/check_video_uploaded')
 def check_video_uploaded():
-    video_path = session.get('uploaded_video_path')
-    if video_path and os.path.exists(video_path):
+    filename = request.args.get('filename')
+    if not filename:
+        return jsonify(status="not_found")
+    video_path = os.path.join(UPLOAD_FOLDER, secure_filename(filename))
+    if os.path.exists(video_path):
         return jsonify(status="ok")
     return jsonify(status="not_found")
 
 @app.route('/save_prediction', methods=['POST'])
 def save_prediction():
-    video_path = session.get('uploaded_video_path')
-    if not video_path or not os.path.exists(video_path):
-        return jsonify({"status": "error", "message": "No uploaded video found."}), 400
+    filename = request.args.get('filename')
+    if not filename:
+        return jsonify({"status": "error", "message": "No filename provided"}), 400
+
+    video_path = os.path.join(UPLOAD_FOLDER, secure_filename(filename))
+    if not os.path.exists(video_path):
+        return jsonify({"status": "error", "message": "Video not found"}), 404
 
     output_path = os.path.join(RESULT_FOLDER, 'result_' + os.path.basename(video_path))
 
