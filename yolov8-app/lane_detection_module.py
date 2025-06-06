@@ -155,8 +155,8 @@ def detect_lane(frame, previous_lines=None, last_detection_time=None, max_no_det
             direction = "Turn Right"
 
         (text_width, _), _ = cv2.getTextSize(direction, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)
-        text_x = (w - text_width) // 2
-        text_y = int(center_y - h * 0.05)
+        text_x = (w - text_width) // 2 # Centered text
+        text_y = int(center_y - h * 0.05) # Adjusted text position
 
         cv2.putText(combo_image, direction, (text_x, text_y),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)

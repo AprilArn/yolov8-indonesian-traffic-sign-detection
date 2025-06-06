@@ -134,14 +134,14 @@ h1 {
 }
 
 .mode-buttons .btn {
-    background-color: #2f2f80;
+    background-color: #555;
 }
 
 .mode-buttons .btn:active {
     background-color: #3030ea;
 }
 
-.checkbox-label {
+/* .checkbox-label {
     display: flex;
     align-items: center;
     background-color: #444;
@@ -155,7 +155,7 @@ h1 {
 .checkbox-label input[type="checkbox"] {
     margin-right: 8px;
     transform: scale(1.2);
-}
+} */
 
 .clear-btn {
     background-color: #a03333;

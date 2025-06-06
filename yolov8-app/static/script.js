@@ -19,7 +19,6 @@ function startCameraMode() {
     const stream = document.getElementById("video-stream");
     stream.src = "/camera_feed";
     document.getElementById("upload-form").style.display = "none";    // Sembunyikan form upload
-    // document.getElementById("action-buttons").style.display = "block"; // Tampilkan tombol aksi start dan clear
 
     // Nonaktifkan tombol Clear
     const clearBtn = document.querySelector(".clear-btn");
@@ -29,7 +28,6 @@ function startCameraMode() {
     const startBtn = document.querySelector(".start-btn");
     startBtn.classList.add("disabled");
 
-
 }
 
 function selectFileMode() {
@@ -37,7 +35,6 @@ function selectFileMode() {
     clearStream(); // reset tampilan
     handleUploadStart();
     document.getElementById("upload-form").style.display = "block"; // tampilkan upload form
-    // document.getElementById("action-buttons").style.display = "block"; // Tampilkan tombol aksi start dan clear
     setActiveMode("File Upload");
 
 }
@@ -56,11 +53,7 @@ function handleUploadStart() {
     const saveBtn = document.querySelector(".save-btn");
     saveBtn.classList.add("disabled");
 
-    // Setelah upload berhasil (tunggu server respon), aktifkan kembali tombol
-    // Gunakan fetch event listener atau polling status jika perlu
-
-    // Jika halaman reload (form kirim via POST normal), gunakan event onload:
-
+    // Aktifkan kembali tombol Start dan Save setelah halaman dimuat
     window.addEventListener('load', () => {
         startBtn.classList.remove("disabled");  // Aktifkan tombol Start
         saveBtn.classList.remove("disabled");   // Aktifkan tombol Save
@@ -69,6 +62,13 @@ function handleUploadStart() {
 }
 
 function saveResults() {
+
+    const saveBtn = document.querySelector(".save-btn");
+    const startBtn = document.querySelector(".start-btn");
+
+    // Nonaktifkan tombol Save dan Start
+    saveBtn.classList.add("disabled");
+    startBtn.classList.add("disabled");
 
     fetch('/save_prediction', {
         method: 'POST'
@@ -95,11 +95,13 @@ function startDetection() {
 
     const stream = document.getElementById("video-stream");
     const uploadForm = document.getElementById("upload-form");
+    const saveBtn = document.querySelector(".save-btn");
+    const startBtn = document.querySelector(".start-btn");
+
+    // Nonaktifkan tombol Save dan Start
+    saveBtn.classList.add("disabled");
+    startBtn.classList.add("disabled");
     
-    // Tampilkan tombol upload dulu
-    // uploadForm.style.display = "block";
-    
-    // Periksa apakah video sudah diupload
     fetch("/check_video_uploaded")
     .then(res => res.json())
     .then(data => {

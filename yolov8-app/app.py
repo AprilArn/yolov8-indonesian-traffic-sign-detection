@@ -7,14 +7,14 @@ from werkzeug.utils import secure_filename
 from lane_detection_module import detect_lane
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"  # Tetapkan menggunakan kunci rahasia untuk sesi atau tidak perlu menggunakan sesi
+app.secret_key = "secret_key"  # secret key for session management
 
 UPLOAD_FOLDER = r'yolov8-app/media/uploads'
 RESULT_FOLDER = r'yolov8-app/media'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
 
-model = YOLO(r"D:\Perkuliahan\Semester 8\Skripsi\version-control\yolov8-indonesian-traffic-sign-detection\models\runs_v8n_736\detect\train\weights\best.pt")
+model = YOLO(r"D:\Perkuliahan\Semester 8\Skripsi\version-control\yolov8-indonesian-traffic-sign-detection\models\runs_v8n_640\detect\train\weights\best.pt")
 
 current_fps = 0
 
@@ -56,6 +56,7 @@ def generate_camera_stream():
                 detections.append(f"{label} ({conf:.2f})")
         latest_detection = detections
 
+        # Call the lane detection function
         frame_with_boxes, previous_lines, last_detection_time = detect_lane(
             frame_with_boxes, previous_lines, last_detection_time
         )
@@ -115,6 +116,7 @@ def generate_frames(path):
                 detections.append(f"{label} ({conf:.2f})")
         latest_detection = detections
 
+        # Call the lane detection function
         frame_with_boxes, previous_lines, last_detection_time = detect_lane(
             frame_with_boxes, previous_lines, last_detection_time
         )
@@ -176,3 +178,4 @@ def clear_uploaded_video():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
