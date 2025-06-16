@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from lane_detection_module import detect_lane
 
 app = Flask(__name__)
-app.secret_key = "secret_key"  # secret key for session management
+app.secret_key = "session_key"  # secret key for session management
 
 UPLOAD_FOLDER = r'yolov8-app/media/uploads'
 RESULT_FOLDER = r'yolov8-app/media'
