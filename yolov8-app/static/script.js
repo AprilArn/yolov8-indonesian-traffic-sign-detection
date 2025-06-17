@@ -35,7 +35,7 @@ function selectFileMode() {
     clearStream(); // reset tampilan
     handleUploadStart();
     document.getElementById("upload-form").style.display = "block"; // tampilkan upload form
-    setActiveMode("File Upload");
+    setActiveMode("File");
 
 }
 
@@ -137,7 +137,7 @@ function clearStream() {
 
     stream.src = "";
     document.getElementById("upload-form").style.display = "block";
-    setActiveMode("");
+    setActiveMode("File");
 
     // Request ke server untuk hapus file yang sudah di-upload
     fetch('/clear_uploaded_video', {
